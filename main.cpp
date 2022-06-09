@@ -43,8 +43,8 @@ bool gRenderQuad = true;
 //Graphics program
 GLuint gProgramID = 0;
 GLint gVertexPos2DLocation = -1;
-GLuint gVBO = 0;
-GLuint gIBO = 0;
+GLuint gVBO[2];
+GLuint gVAO = 0;
 
 bool init() {
 	//Initialize SDL
@@ -101,7 +101,7 @@ bool initGL() {
 	//TODO: ַהוסü המכזום בûעü פאיכ
 	const GLchar* vertexShaderSource[] =
 	{
-		"#version 140\nin vec2 LVertexPos2D; void main() { gl_Position = vec4( LVertexPos2D.x, LVertexPos2D.y, 0, 1 ); }"
+		"#version 430\nlayout (location=0) in vec3 VertexPosition; layout (location=1) in vec3 VertexColor; out vec3 Color; void main() { Color = VertexColor; gl_Position = vec4(VertexPosition, 1.0); }"
 	};
 
 	//Set vertex source
@@ -127,7 +127,7 @@ bool initGL() {
 	//TODO: ַהוסü עמזו המכזום בûעü פאיכ
 	const GLchar* fragmentShaderSource[] =
 	{
-		"#version 140\nout vec4 LFragment; void main() { LFragment = vec4( 1.0, 1.0, 1.0, 1.0 ); }"
+		"#version 430\nin vec3 Color; out vec4 FragColor; void main() { FragColor = vec4(Color, 1.0); }"
 	};
 
 	//Set fragment source
@@ -159,35 +159,47 @@ bool initGL() {
 		return false;
 	}
 	//Get vertex attribute location
-	gVertexPos2DLocation = glGetAttribLocation(gProgramID, "LVertexPos2D");
-	if (gVertexPos2DLocation == -1) {
-		std::cout << "LVertexPos2D is not a valid glsl program variable!" << std::endl;
-		return false;
-	}
+	//gVertexPos2DLocation = glGetAttribLocation(gProgramID, "LVertexPos2D");
+	//if (gVertexPos2DLocation == -1) {
+		//std::cout << "LVertexPos2D is not a valid glsl program variable!" << std::endl;
+		//return false;
+	std::cout << glGetAttribLocation(gProgramID, "VertexColor") << std::endl;
 	//Initialize clear color
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 
 	//VBO data
-	GLfloat vertexData[] =
-	{
-		-0.5f, -0.5f,
-		 0.5f, -0.5f,
-		 0.5f,  0.5f,
-		-0.5f,  0.5f
+	GLfloat vertexData[] = {
+		-0.8f, -0.8f, 0.0f,
+		0.8f, -0.8f, 0.0f,
+		0.0f, 0.8f, 0.0f
 	};
 
-	//IBO data
-	GLuint indexData[] = { 0, 1, 2, 3 };
+	GLfloat color_data[] = {
+		1.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f,
+	};
+
 
 	//Create VBO
-	glGenBuffers(1, &gVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, gVBO);
-	glBufferData(GL_ARRAY_BUFFER, 2 * 4 * sizeof(GLfloat), vertexData, GL_STATIC_DRAW);
+	//GLuint gVBO[2];
+	glGenBuffers(2, gVBO);
+	GLuint pb = gVBO[0];
+	GLuint pc = gVBO[1];
+	glBindBuffer(GL_ARRAY_BUFFER, pb);
+	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), vertexData, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, pc);
+	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), color_data, GL_STATIC_DRAW);
 
-	//Create IBO
-	glGenBuffers(1, &gIBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(GLuint), indexData, GL_STATIC_DRAW);
+	//Create VAO
+	glGenVertexArrays(1, &gVAO);
+	glBindVertexArray(gVAO);
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, pb);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glBindBuffer(GL_ARRAY_BUFFER, pc);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
 	return true;
 }
@@ -210,19 +222,8 @@ void render() {
 		//Bind program
 		glUseProgram(gProgramID);
 
-		//Enable vertex position
-		glEnableVertexAttribArray(gVertexPos2DLocation);
-
-		//Set vertex data
-		glBindBuffer(GL_ARRAY_BUFFER, gVBO);
-		glVertexAttribPointer(gVertexPos2DLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), NULL);
-
-		//Set index data and render
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
-		glDrawElements(GL_TRIANGLE_FAN, 4, GL_UNSIGNED_INT, NULL);
-
-		//Disable vertex position
-		glDisableVertexAttribArray(gVertexPos2DLocation);
+		glBindVertexArray(gVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		//Unbind program
 		glUseProgram(NULL);
