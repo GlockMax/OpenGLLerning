@@ -9,6 +9,28 @@
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
+//Starts up SDL, creates window, and initializes OpenGL
+bool init();
+
+//Initializes rendering program and clear color
+bool initGL();
+
+//Input handler
+void handleKeys(unsigned char key, int x, int y);
+
+//Per frame update
+void update();
+
+//Renders quad to the screen
+void render();
+
+//Frees media and shuts down SDL
+void close();
+
+//Shader loading utility programs
+void printProgramLog(GLuint program);
+void printShaderLog(GLuint shader);
+
 //The window we'll be rendering to
 SDL_Window* gWindow = NULL;
 
@@ -24,7 +46,6 @@ GLint gVertexPos2DLocation = -1;
 GLuint gVBO = 0;
 GLuint gIBO = 0;
 
-//Starts up SDL, creates window, and initializes OpenGL
 bool init() {
 	//Initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -70,7 +91,6 @@ bool init() {
 	return true;
 }
 
-//Initializes rendering program and clear color
 bool initGL() {
 	//Generate program
 	gProgramID = glCreateProgram();
@@ -172,18 +192,15 @@ bool initGL() {
 	return true;
 }
 
-//Input handler
 void handleKeys(unsigned char key, int x, int y) {
 	//Toggle quad
 	gRenderQuad = key == 'q' ? !gRenderQuad : gRenderQuad;
 }
 
-//Per frame update
 void update() {
 	//No per frame update needed
 }
 
-//Renders quad to the screen
 void render() {
 	//Clear color buffer
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -212,7 +229,6 @@ void render() {
 	}
 }
 
-//Frees media and shuts down SDL
 void close() {
 	//Deallocate program
 	glDeleteProgram(gProgramID);
@@ -225,7 +241,6 @@ void close() {
 	SDL_Quit();
 }
 
-//Проверка индекса программы
 void printProgramLog(GLuint program) {
 	//Make sure name is shader
 	if (glIsProgram(program)) {
@@ -251,7 +266,6 @@ void printProgramLog(GLuint program) {
 	}
 }
 
-//Проеверка индекса шейдера
 void printShaderLog(GLuint shader) {
 	//Make sure name is shader
 	if (glIsShader(shader)) {
